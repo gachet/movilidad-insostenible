@@ -1,6 +1,6 @@
 # Movilidad insostenible: Qué historias nos cuentan los datos de desplazamientos al trabajo de la comunidad de Madrid
 
-![movilidad insostenible](https://www.medialab-prado.es/proyectos/movilidad-insostenible-que-historias-nos-cuentan-los-datos-de-desplazamientos-al-trabajo)
+![movilidad insostenible](https://www.medialab-prado.es/sites/default/files/styles/imagenes_medianas/public/2018-03/Slicemov.png?itok=Z6LHG7pp)
 
 
 La movilidad urbana es una cuestión clave transversal a varios de los Objetivos de Desarrollo Sostenible. Por ejemplo podemos encontrar conexiones con:
