@@ -34,4 +34,4 @@ También intentaremos jugar con la creación de escenarios alternativos. Por eje
 Para responder a estas preguntas comenzaremos elaborando una herramienta de exploración de los datos disponibles que nos permita investigar distintas hipótesis. Para llegar a concluiones que favorezcan la prevención del cambio climático.
 
 ---
-[Proyecto seleccionado](https://www.medialab-prado.es/proyectos/polucion-gratuita-de-la-industria-la-basura) dentro del [Taller de Periodismo de datos 2018](https://www.medialab-prado.es/proyectos/movilidad-insostenible-que-historias-nos-cuentan-los-datos-de-desplazamientos-al-trabajo): Los ODS relacionados con Medio Ambiente en Madrid
+[Proyecto seleccionado](https://www.medialab-prado.es/proyectos/movilidad-insostenible-que-historias-nos-cuentan-los-datos-de-desplazamientos-al-trabajo) dentro del [Taller de Periodismo de datos 2018](https://www.medialab-prado.es/proyectos/movilidad-insostenible-que-historias-nos-cuentan-los-datos-de-desplazamientos-al-trabajo): Los ODS relacionados con Medio Ambiente en Madrid
