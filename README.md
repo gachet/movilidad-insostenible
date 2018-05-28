@@ -1,5 +1,4 @@
-# Movilidad insostenible
-## Qué historias nos cuentan los datos de desplazamientos al trabajo de la comunidad de Madrid
+# Movilidad insostenible:Qué historias nos cuentan los datos de desplazamientos al trabajo de la comunidad de Madrid
 
 ![movilidad insostenible](https://www.medialab-prado.es/sites/default/files/styles/imagenes_medianas/public/2018-03/Slicemov.png?itok=Z6LHG7pp)
 
@@ -34,4 +33,5 @@ También intentaremos jugar con la creación de escenarios alternativos. Por eje
 
 Para responder a estas preguntas comenzaremos elaborando una herramienta de exploración de los datos disponibles que nos permita investigar distintas hipótesis. Para llegar a concluiones que favorezcan la prevención del cambio climático.
 
+---
 [Proyecto seleccionado](https://www.medialab-prado.es/proyectos/polucion-gratuita-de-la-industria-la-basura) dentro del [Taller de Periodismo de datos 2018](https://www.medialab-prado.es/proyectos/movilidad-insostenible-que-historias-nos-cuentan-los-datos-de-desplazamientos-al-trabajo): Los ODS relacionados con Medio Ambiente en Madrid
