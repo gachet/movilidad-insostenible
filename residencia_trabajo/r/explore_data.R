@@ -1,6 +1,10 @@
 library(tidyverse)
 setwd('~/Documents/_projects/2018/movilidad-insostenible/residencia_trabajo/r/')
 
+###############################################################################
+######################### INSIDE -  OUTSIDE BY ORIGIN #########################
+###############################################################################
+
 lista_origen_trabajo <- read_csv('outputs/lista_origen_trabajo.csv')
 municipios <- read.xlsx(excelFile, 'Municipios y Distritos') %>% 
   set_colnames(c('ine_code', 'statistical_zone', 'name', 'province')) %>% 
@@ -105,3 +109,8 @@ map <- ggplot() +
 map
 
 ggsave('outputs/imgs/map.png', map)
+
+
+###############################################################################
+############################## MARCHETTI CONSTANT #############################
+###############################################################################

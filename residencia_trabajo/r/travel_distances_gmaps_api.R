@@ -9,31 +9,23 @@ setwd('~/Documents/_projects/2018/movilidad-insostenible/residencia_trabajo/r/')
 ########## SET THE ARGUMENTS ##########
 #######################################
 
-APIkey <-  'AIzaSyAiEWRKSQfdgtDDDW3nhGL6K2atuPtwDlk'
-APIkey <-  'AIzaSyCnC87kEtNLXFAKtpA4GWLwbrm6QROnteU'
-# APIkey <-  'AIzaSyATzdnKH-qC4E_ZaI7ZfR6OcO57EGO4qOI'
-# APIkey <-  'AIzaSyDQaIHzsAKx4_fZUInaCyw3ETTirvhRZ1I'
-# APIkey <-  'AIzaSyDUgEyIXzsZVzvwxS9_MigaFG46mevDiqM'
-# APIkey <-  'AIzaSyChK54c4Yh5Ue0LZL2e_l1HBA1jQsIxgAk'
-# APIkey <-  'AIzaSyC7L2CfpwftaDK6XYoTDRN3ER6EAbc1tEM'
-# APIkey <-  'AIzaSyDUe5aWAN_P2UFHVgcMefP1dBrcqWKjRj0'
-# APIkey <-  'AIzaSyD4cYwV1h-fcdnmGH_Ewg1uV7cWYjxromg'
-# APIkey <-  'AIzaSyDQFPzJ0Sn4AmGzGuqpVduDvuNRmzjsUyg'
-# APIkey <-  'AIzaSyCyu6bC0uPOtC-JTQllUV6MCUoErWDHW6Q'
-
-
 #done!
 # driving & best_guess
 # driving & pessimistic
+# driving & optimistic
+# transit
+# bicycling
+# walking
 
-# mode: "driving",  "walking",  "bicycling",  "transit"
-mode <- 'driving'
+# mode: "transit", "bicycling", "walking", "driving" 
+mode <- 'walking'
 
 # traffic_model: 'best_guess',  'pessimistic', 'optimistic'
-traffic <- 'optimistic'
+traffic <- NA
 
 # departure_time: in seconds from 1970
 dept_time <- '1530000000' # to seconds de una fecha legible, elegir por el empleo del tiempo, a qué hora se va a trabajar, a qué hora se vuelve...
+
 
 
 
@@ -58,9 +50,9 @@ lista_origen_trabajo <- read.xlsx(excelFile, 'Lista origen-destino') %>%
 codes <- unique(lista_origen_trabajo$origin_ine_code)
 
 # results <- data_frame()
-# results <- read_csv('outputs/temp_results.csv') 
+# results <- read_csv('outputs/temp_results.csv', col_types = 'ciiicccc') 
 
-for (c in 69:length(codes)) {
+for (c in 243:length(codes)) {
   code <- codes[c]
   ########### ORIGIN & DESTINATIONS ###########
   origin <- municipios %>% 
@@ -94,8 +86,8 @@ for (c in 69:length(codes)) {
                   mode,
                   '&departure_time=',
                   dept_time,
-                  '&traffic_model=',
-                  traffic,
+                  # '&traffic_model=',
+                  # traffic,
                   '&key=',
                   APIkey)
     
@@ -105,8 +97,19 @@ for (c in 69:length(codes)) {
     for (i in 1:(length(raw$destination_addresses))) {
       # los datos
       j <- length(raw$destination_addresses) - i + 1;
-      sbst <- jsonlite::flatten(raw$rows[1, ][[1]][j, ]) %>%
-        select(-contains('text')) %>% 
+      tmp <- tmp <- jsonlite::flatten(raw$rows[1, ][[1]])
+      if (tmp[j, ] != 'ZERO_RESULTS') {
+        sbst <- jsonlite::flatten(raw$rows[1, ][[1]][j, ]) %>%
+          select(-contains('text')) 
+          
+      } else {
+        sbst <- data_frame(status = 'ZERO_RESULTS',
+                           distance.value = NA, 
+                           duration.value = NA
+                           )
+      }
+      
+      sbst <- sbst %>% 
         mutate('origin' = raw$origin_addresses,
                'origin_ine_code' = code,
                'dest_ine_code' = sbst_group$destination_ine_code[i],
@@ -117,8 +120,12 @@ for (c in 69:length(codes)) {
   }
 }
 
-write_csv(results, 'outputs/temp_results.csv') # drivin optimistic 69
 
+
+
+write_csv(results, 'outputs/temp_results.csv') # bicycling
+backup <- results
+results <- walking
 ########### PRETIFY THE OUTPUT ###########
 results <- results %>% 
   mutate('mode' = mode,
@@ -129,12 +136,19 @@ names(results) <- gsub('.value', '', colnames(results), fixed = TRUE)
 
 unique(results$status) # OK
 
+bike <- results[ ,1:8] %>% 
+  filter(mode == 'bicycling')
+
+walking <- results[ ,c(1, 4:12)] %>% 
+  filter(is.na(mode))
+
 results <- results %>% 
-  distinct(status, distance, duration, duration_in_traffic, origin, destination, mode, traffic, departure_time)
+  distinct(status, distance, duration, duration_in_traffic, origin, origin_ine_code, destination, dest_ine_code, mode, traffic, departure_time)
 
 ########### WRITE THE OUTPUT ###########
-filename <- paste(mode, traffic, 'distances.csv', sep = '_')
-write_csv(results, paste0('outputs/', filename))
+filename <- paste(mode, traffic, '.csv', sep = '_')
+filename <- paste(mode, '.csv', sep = '')
+write_csv(results, paste0('outputs/distances/', filename))
 
 ########### REMOVE OBJECTS ###########
 rm(APIkey, c, code, codes, dept_time, destination, g, lista_origen_trabajo, mode, municipios, origin, raw, sbst, sbst_dest, sbst_group, tmp, traffic, url, dest_code, i)
