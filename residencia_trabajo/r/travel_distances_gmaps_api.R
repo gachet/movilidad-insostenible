@@ -124,8 +124,7 @@ for (c in 243:length(codes)) {
 
 
 write_csv(results, 'outputs/temp_results.csv') # bicycling
-backup <- results
-results <- walking
+
 ########### PRETIFY THE OUTPUT ###########
 results <- results %>% 
   mutate('mode' = mode,
@@ -135,12 +134,6 @@ results <- results %>%
 names(results) <- gsub('.value', '', colnames(results), fixed = TRUE)
 
 unique(results$status) # OK
-
-bike <- results[ ,1:8] %>% 
-  filter(mode == 'bicycling')
-
-walking <- results[ ,c(1, 4:12)] %>% 
-  filter(is.na(mode))
 
 results <- results %>% 
   distinct(status, distance, duration, duration_in_traffic, origin, origin_ine_code, destination, dest_ine_code, mode, traffic, departure_time)
