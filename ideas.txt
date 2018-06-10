@@ -1,0 +1,30 @@
+Ideas
+
+01. Nos movemos en el mejor metro posible?
+
+Metodología:
+A partir de las paradas actuales, basándonos en unas condiciones concretas, generar redes alternativas y de forma aleatoria.
+
+La idea es contrastar la eficacia de la red actual respecto a estas nuevas propuestas.
+
+Criterio del contraste:
+Combinación de tiempo real menos tiempo aleatorio x número de desplazamiento por trabajo entre origen y destino.
+
+02. Detectores de tráfico.
+
+Metodología:
+basándonos en un muestreos de cada 5 min durante una semana
+a. visualizar en un mapa la densidad y en el tiempo de trayectos.
+b. visualizar la relación con otros nodos tipo colegios.
+c. agrupación de nodos según series temporales
+d. sacar una visualización en vídeo molona
+
+03. Sacarle punta al origen destino
+
+Metodología: 
+a partir de los pares origen destino que tenemos y que vamos a visualizar, vamos a jugar buscando otras cosas, como por ejemplo: aislar los viajes más conflictivos, como los que van de norte a sur y comparar los que tienen líneas de transporte público y los que no, y asimismo compararlos con el tráfico de vehículo privado.
+
+04. Parque de vehículos y análisis sociodemográfico.
+
+Metodología:
+Visualizar la densidad de matriculación por calles y compararlo con otras cosas: datos sociodemográficos, tránsito, transporte público etc
