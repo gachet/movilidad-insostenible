@@ -28,3 +28,6 @@ a partir de los pares origen destino que tenemos y que vamos a visualizar, vamos
 
 Metodología:
 Visualizar la densidad de matriculación por calles y compararlo con otras cosas: datos sociodemográficos, tránsito, transporte público etc
+
+
+Nueva idea:
