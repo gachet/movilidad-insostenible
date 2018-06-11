@@ -2,14 +2,10 @@ Ajustar datos.
 
 2. Bea hace gráfica barra diferenciales y distribución trayectos.
 
-3. Sergio hece diagráma diametral (isócronbo).
+3. Sergio hece diagrama diametral (isócrono).
 
 4. Horaci hace un wireframe para los diagramas diametrales.
 
 5. Horaci hace recorridos sobre el mapa con pares origen destino.
 
-6.Ioannis busca métricas de relación entre origen destino, relaciones tiempo-distancia  y relaciones de rutas.
-
-
-madrid.org/noimecalles
-shapefiles nomecalles
+6.Ioánnis busca métricas de relación entre origen destino, relaciones tiempo-distancia  y relaciones de rutas.
