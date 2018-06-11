@@ -18,10 +18,10 @@ setwd('~/Documents/_projects/2018/movilidad-insostenible/residencia_trabajo/r/')
 # walking
 
 # mode: "transit", "bicycling", "walking", "driving" 
-mode <- 'walking'
+mode <- 'driving'
 
 # traffic_model: 'best_guess',  'pessimistic', 'optimistic'
-traffic <- NA
+traffic <- 'optimistic'
 
 # departure_time: in seconds from 1970
 dept_time <- '1530000000' # to seconds de una fecha legible, elegir por el empleo del tiempo, a qué hora se va a trabajar, a qué hora se vuelve...
@@ -38,7 +38,8 @@ excelFile <-  '../raw_data/residencia_trabajo_distritos.xlsx'
 
 municipios <- read.xlsx(excelFile, 'Municipios y Distritos') %>% 
   set_colnames(c('ine_code', 'statistical_zone', 'name', 'province')) %>% 
-  mutate(loc_string = paste(gsub(' ', '+', name), province, 'spain', sep = '+'))
+  mutate(loc_string = paste(gsub(' ', '+', name), province, 'spain', sep = '+')) %>% 
+  transform(loc_string = ifelse(!grepl('Chamartín', name), loc_string, 'Chamartín+Madrid+Comunidad+de+Madrid+spain'))
 
 lista_origen_trabajo <- read.xlsx(excelFile, 'Lista origen-destino') %>% 
   set_colnames(c('route', 
@@ -49,10 +50,9 @@ lista_origen_trabajo <- read.xlsx(excelFile, 'Lista origen-destino') %>%
 # write.csv(lista_origen_trabajo, 'outputs/lista_origen_trabajo.csv')
 codes <- unique(lista_origen_trabajo$origin_ine_code)
 
-# results <- data_frame()
-# results <- read_csv('outputs/temp_results.csv', col_types = 'ciiicccc') 
 
-for (c in 243:length(codes)) {
+results <- data_frame()
+for (c in 1:length(codes)) {
   code <- codes[c]
   ########### ORIGIN & DESTINATIONS ###########
   origin <- municipios %>% 
@@ -86,8 +86,8 @@ for (c in 243:length(codes)) {
                   mode,
                   '&departure_time=',
                   dept_time,
-                  # '&traffic_model=',
-                  # traffic,
+                  '&traffic_model=',
+                  traffic,
                   '&key=',
                   APIkey)
     
@@ -129,7 +129,8 @@ write_csv(results, 'outputs/temp_results.csv') # bicycling
 results <- results %>% 
   mutate('mode' = mode,
          'traffic' = traffic,
-         'departure_time' = dept_time)
+         'departure_time' = dept_time,
+         'duration_in_traffic.value' = ifelse(mode != 'driving', NA, duration_in_traffic.value))
 
 names(results) <- gsub('.value', '', colnames(results), fixed = TRUE)
 
@@ -140,9 +141,28 @@ results <- results %>%
 
 ########### WRITE THE OUTPUT ###########
 filename <- paste(mode, traffic, '.csv', sep = '_')
-filename <- paste(mode, '.csv', sep = '')
+filename <- paste(mode, '_chamartin.csv', sep = '')
 write_csv(results, paste0('outputs/distances/', filename))
 
 ########### REMOVE OBJECTS ###########
 rm(APIkey, c, code, codes, dept_time, destination, g, lista_origen_trabajo, mode, municipios, origin, raw, sbst, sbst_dest, sbst_group, tmp, traffic, url, dest_code, i)
+
+
+########### MERGE FILES ###########
+
+filePath <- 'outputs/distances'
+files <-  list.files(filePath)
+
+distances <- data_frame()
+for (file in files) {
+  name <- unlist(str_split(file, '\\.'))[1]
+  df <- read_csv(paste(filePath, file, sep = '/'), col_types = 'ciicccccccc')
+  assign(name, df)
+  distances <- rbind(distances, df)
+}
+
+distances <- distances %>% 
+  arrange(origin, destination)
+
+write_csv(distances, 'outputs/distances/all_distances.csv')
 

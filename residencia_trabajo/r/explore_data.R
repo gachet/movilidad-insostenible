@@ -115,18 +115,7 @@ ggsave('outputs/imgs/map.png', map)
 ############################## MARCHETTI CONSTANT #############################
 ###############################################################################
 
-filePath <- 'outputs/distances'
-files <-  list.files(filePath)
 
-distances <- data_frame()
-for (file in files) {
-  name <- unlist(str_split(file, '\\.'))[1]
-  df <- read_csv(paste(filePath, file, sep = '/'), col_types = 'ciicccccccc')
-  assign(name, df)
-  distances <- rbind(distances, df)
-}
-
-distances <- distances %>% 
-  arrange(origin, destination)
 
 write_csv(distances, 'outputs/distances/all_distances.csv')
+

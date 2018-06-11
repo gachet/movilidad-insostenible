@@ -25,3 +25,7 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# R files
+r/apiKeys.txt
+r/Rhistory.txt
