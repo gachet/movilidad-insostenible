@@ -1,0 +1,356 @@
+---
+title: "Movilidad residencia - trabajo"
+output:
+  html_document:
+    df_print: paged
+  html_notebook:
+    theme: spacelab
+---
+
+Análisis descriptivo de los datos obtenidos a partir del [Atlas de movilidad residencia - trabajo de la Comunidad de Madrid](http://www.madrid.org/iestadis/fijas/estructu/general/territorio/atlasmovilidad2017/INDEX.html).
+
+Se incluyen las distancias y los tiempos entre dos localizaciones, obtenidos mediante la [Distance Matrix API](https://developers.google.com/maps/documentation/javascript/distancematrix). 
+
+```{r libraries, message=FALSE, warning=FALSE, include=FALSE}
+library(rmarkdown)
+library(tidyverse)
+library(broom)
+library(spatstat) # weighted median
+library(gridExtra) 
+library(rgdal)
+library(rgeos)
+library(plotly)
+
+setwd('~/Documents/_projects/2018/movilidad-insostenible/residencia_trabajo/r/')
+```
+
+
+```{r data, message=FALSE, warning=FALSE, echo=FALSE}
+routes <- read_csv('../data/routes.csv', col_types = 'ccccccciiiici') %>% 
+  mutate(mode_traffic = ifelse(mode != 'driving', mode,  paste(mode, traffic, sep = '_'))) %>% 
+  mutate(mode_traffic = factor(mode_traffic, levels = c('walking' , 'bicycling', 'transit', 'driving_best_guess','driving_optimistic', 'driving_pessimistic')))
+locations <- read_csv('../data/locations.csv', col_types = 'ciiinnicccc')
+```
+
+
+```{r bigs, message=FALSE, warning=FALSE, include=FALSE, error = FALSE}
+people_count <- prettyNum(sum(locations$workers_count), big.mark = ',')
+routes_count <- prettyNum(nrow(routes), big.mark = ',')
+locations_count <- prettyNum(nrow(locations), big.mark = ',')
+```
+
+##### **`r people_count`** personas
+##### **`r routes_count`** rutas
+##### **`r locations_count`** municipios y distritos
+
+
+## Distancias
+#### ¿qué distancia mediana recorren las personas par ir a trabajar?
+
+Para realizar esto cálculos se han eliminado las rutas dentro del mimos municipio/distrito, porque **a las rutas y personas dentro del mismo municipio o distrito se les atribuye distancia 0**.
+
+La distancia mediana de las rutas está entre 45 - 50 km (esto es, la mitad de las rutas tienen 45 - 50 kilómetros o menos).
+El transporte público es el que hace rutas más largas, con una diferencia aproximada de ~5 km respecto al coche.
+
+Ponderando las distancias por el número de las personas que las hacen, y evitar así, sobrerepresentar aquellas rutas extremas que hace muy poca gente, la distancia mediana desciende a unos 16-19 km. Es decir, la mitad de la gente sedesplaza 16-19 km o menos.
+
+
+
+```{r distance_routes, echo=FALSE, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
+routes_f <- routes %>% 
+  filter(origin_code != destination_code)
+
+medians <- routes_f %>%
+  group_by(mode_traffic) %>% 
+  summarise(median = median(distance, na.rm = T),
+            median_people = weighted.median(distance, workers_count, na.rm=TRUE))
+
+r <-routes_f %>% 
+  ggplot(aes(mode_traffic, distance)) + 
+  geom_boxplot(outlier.alpha = 0.2) +
+  geom_text(data = medians, aes(x = mode_traffic, y = median, label=paste0(round(median/1000), ' km')), vjust = -1) +
+  labs(title = 'Distancia de las rutas',
+       subtitle = paste0('Base total: ', prettyNum(nrow(routes_f), big.mark = ','), ' rutas'),
+       y = 'Distancia (metros)',
+      x = 'Modo de transporte')
+
+p <- routes_f %>% 
+  ggplot() + 
+  geom_boxplot(aes(mode_traffic, distance,  weight = workers_count), outlier.alpha = 0.2) +
+  geom_text(data = medians, aes(x = mode_traffic, y = median_people, label=paste0(round(median_people/1000), ' km')), vjust = -1) +
+  labs(title = 'Distancia recorrida por las personas',
+       subtitle = paste0('Base total: ', prettyNum(sum(locations$outside, na.rm = T), big.mark = ','), ' personas'),
+       y = 'Distancia (metros)',
+      x = 'Modo de transporte')
+
+grid.arrange(r, p, nrow = 1)
+rm(p, r)
+```
+
+
+#### ¿desde qué municipios/distritos se recorre más distancia?
+Se toman como base las distancias caminando para los **trabajadores que viajan fuera de su municipio/distrito**.
+Como norma general, se desplazan más los que están más alejados lejos del centro de Madrid.
+Hay excepciones, en algunos municipios no necesitan trasladarse tanto para trabajar: Villaconejos, Buitrago… (supongo que haya industrias específicas)
+
+##### *Para los 20 municipios con más trabajadores* 
+```{r distance_deviation, echo=FALSE, fig.height=12, fig.width=12, message=FALSE, warning=FALSE}
+top20 <- locations %>% 
+  top_n(20, workers_count) %>% 
+  .$code
+
+tmp <- routes_f %>% 
+  filter(origin_code %in% top20) %>% 
+  filter(mode == 'walking') %>% 
+  group_by(origin_code) %>% 
+  mutate(median_people = weighted.median(distance, workers_count, na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  arrange(median_people) %>% 
+  mutate(origin = factor(origin, levels = rev(unique(.$origin))))
+
+total_median_walking <- medians %>% 
+  filter(mode_traffic == 'walking') %>% 
+  .$median_people
+
+ggplot(tmp, aes(origin, distance, weight = workers_count)) + 
+  geom_boxplot() +
+  labs(title = "Distancia de las personas",
+       y = 'Distancia (metros)') +
+  geom_hline(yintercept = total_median_walking, mode_traffic, color = 'red') +
+  coord_flip()
+
+
+```
+
+
+##### *Para todos los municipios*
+```{r distance_deviation_cmap, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+# routes data
+tmp <- routes_f %>% 
+  filter(mode == 'walking') %>% 
+  group_by(origin_code) %>% 
+  mutate(median_people = weighted.median(distance, workers_count, na.rm=TRUE),
+         median_dif = median_people - total_median_walking) %>% 
+  distinct(origin, origin_code, median_people, median_dif) 
+
+# shapefile
+distritos <- readOGR('../shapefiles/distritos/200001563.shp')
+distritosLongLat <- spTransform(distritos, CRS("+proj=longlat"))  
+distritosLongLat@data <- distritosLongLat@data %>% 
+  separate(DESBDT, into = c('muni_code', 'district_code'), sep='-', remove = FALSE) %>% 
+  mutate( 
+    muni_code = paste0('28', muni_code),
+    code = ifelse(muni_code != '28079', muni_code, paste0('28', DESBDT)),
+    id = as.character(row_number())
+  ) %>% 
+  left_join(tmp, by =c('code' = 'origin_code'))
+
+dataDistritos <- fortify(distritosLongLat, region="id") %>% 
+  left_join(distritosLongLat@data)
+
+
+map <- ggplot(dataDistritos) + 
+  geom_polygon(aes(text=origin, x=long, y=lat, group = group, fill = median_dif)) + 
+  scale_fill_distiller(palette = "Spectral")+ 
+  labs(title='Diferencia distancia (m) a la mediana total',
+       subtitle = paste0('Base total: ', prettyNum(sum(locations$outside, na.rm = T), big.mark = ','), ' personas'),
+       fill='Diferencia (m)') +
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank()
+  )
+ggplotly(map, tooltip = 'text')
+rm(map)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Tiempos
+#### ¿qué tiempo mediana emplean las personas par ir a trabajar?
+
+Para realizar esto cálculos se han eliminado las rutas dentro del mimos municipio/distrito, porque **a las rutas y personas dentro del mismo municipio o distrito se les atribuye tiempo 0**.
+
+Atendiendo a las rutas, los tiempos en transporte sostenible (andando, bici, transporte público) son muy elevados y parece que el coche es la única alternativa.
+
+Viendo los tiempo que emplearían las personas, vemos que la mitad de los trabajadores podrían llegar al trabajo en bici o transporte en menos de una hora. Esto es bastante tiempo, pero quizá el 25% pueda llegar en 30 minutos !! (lo exploraremos más adelante). El coche gana en tiempo,  e incluso siendo pesimistas, la mitad de la gente llegaría al trabajo en 30 min. Cabe destacar que en coche es donde hay menos dispersión. A más distancia, más mrece la pena el coche, como era de esperar.
+
+
+
+
+```{r time_routes, echo=FALSE, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
+medians <- routes_f %>%
+  group_by(mode_traffic) %>% 
+  summarise(median = median(duration_in_traffic, na.rm = T),
+            median_people = weighted.median(duration_in_traffic, workers_count, na.rm=TRUE))
+
+r <-routes_f %>% 
+  ggplot(aes(mode_traffic, duration_in_traffic)) + 
+  geom_boxplot(outlier.alpha = 0.2) +
+  ylim(0, 40000) +
+  geom_text(data = medians, aes(x = mode_traffic, y = median, label=paste0(round(median/60), ' min')), vjust = -1) +
+  labs(title = 'Tiempo en recorrer las rutas',
+       subtitle = paste0('Base total: ', prettyNum(nrow(routes_f), big.mark = ','), ' rutas'),
+       y = 'Tiempo (segundos)',
+      x = 'Modo de transporte')
+
+p <- routes_f %>% 
+  ggplot() + 
+  geom_boxplot(aes(mode_traffic, duration_in_traffic,  weight = workers_count), outlier.alpha = 0.2) +
+  ylim(0, 40000) +
+  geom_text(data = medians, aes(x = mode_traffic, y = median_people, label=paste0(round(median_people/60), ' min')), vjust = -1) +
+  labs(title = 'Tiempo empleado por las personas',
+       subtitle = paste0('Base total: ', prettyNum(sum(locations$outside, na.rm = T), big.mark = ','), ' personas'),
+       y = 'Tiempo (segundos)',
+      x = 'Modo de transporte')
+
+grid.arrange(r, p, nrow = 1)
+rm(r, p)
+```
+
+
+#### ¿desde qué municipios/distritos se tarda más tiempo?
+Se toman como base los tiempos en coche (por ser más rápidos y los unicos posibles desde algunos puntos remotos) para los **trabajadores que viajan fuera de su municipio/distrito**.
+Para los 20 municipios/distritos con más trabajadores la distribución entre tiempo y distancia es muy similar.
+
+##### *Para los 20 municipios con más trabajadores* 
+```{r time_deviation, echo=FALSE, fig.height=12, fig.width=12, message=FALSE, warning=FALSE}
+tmp <- routes_f %>% 
+  filter(origin_code %in% top20) %>% 
+  filter(traffic == 'best_guess') %>% 
+  group_by(origin_code) %>% 
+  mutate(median_people = weighted.median(duration_in_traffic, workers_count, na.rm=TRUE)) %>% 
+  ungroup() %>% 
+  arrange(median_people) %>% 
+  mutate(origin = factor(origin, levels = rev(unique(.$origin))))
+
+total_median_driving <- medians %>% 
+  filter(mode_traffic == 'driving_best_guess') %>% 
+  .$median_people
+
+ggplot(tmp, aes(origin, duration_in_traffic, weight = workers_count)) + 
+  geom_boxplot() +
+  labs(title = 'Tiempo empleado por las personas',
+       y = 'Tiempo (segundos)') +
+  geom_hline(yintercept = total_median_driving, mode_traffic, color = 'red') +
+  coord_flip()
+
+
+```
+
+
+##### *Para todos los municipios*
+La distribución de los tiempo no es tan concéntrica como la de las distancias, y se identifican municipios con tiempos especialmente cortos: Alcobendas, San Fernando de Henares, Villa de Vallecas... Recordar que las distancias están calculadas para los que trabajan en un municipio/distrito diferente al que residen. 
+```{r time_deviation_cmap, echo=FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+# routes data
+tmp <- routes_f %>% 
+  filter(traffic == 'best_guess') %>% 
+  group_by(origin_code) %>% 
+  mutate(median_people = weighted.median(duration_in_traffic, workers_count, na.rm=TRUE),
+         median_dif = median_people - total_median_driving) %>% 
+  distinct(origin, origin_code, median_people, median_dif) 
+
+# shapefile
+distritosLongLat <- spTransform(distritos, CRS("+proj=longlat"))  
+distritosLongLat@data <- distritosLongLat@data %>% 
+  separate(DESBDT, into = c('muni_code', 'district_code'), sep='-', remove = FALSE) %>% 
+  mutate( 
+    muni_code = paste0('28', muni_code),
+    code = ifelse(muni_code != '28079', muni_code, paste0('28', DESBDT)),
+    id = as.character(row_number())
+  ) %>% 
+  left_join(tmp, by =c('code' = 'origin_code'))
+
+dataDistritos <- fortify(distritosLongLat, region="id") %>% 
+  left_join(distritosLongLat@data)
+
+
+map <- ggplot(dataDistritos) + 
+  geom_polygon(aes(text=origin, x=long, y=lat, group = group, fill = median_dif)) + 
+  scale_fill_distiller(palette = "Spectral")+ 
+  labs(title='Diferencia tiempo (s) a la mediana total',
+       subtitle = paste0('Base total: ', prettyNum(sum(locations$outside, na.rm = T), big.mark = ','), ' personas'),
+       fill='Diferencia (m)') +
+  theme(panel.background = element_blank(),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank()
+  )
+ggplotly(map, tooltip = 'text')
+
+```
+
+
+
+## tiempo - distancia
+Relación entre la distancia y el tiempo por modo de transporte. Sólo se ha tomado el driving best_guess porque es muy parecido para los tres supeustos de tráfico.
+
+Lar relaciones son bastante lineales, excepto en el caso del transporte público (transit).
+
+Según aumenta la distancia, el coche se vuelve más eficiente. Quedando la bici y caminar para cubrir las distancias cortas.
+
+
+```{r dist_time, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+tmp <- routes_f %>% 
+  filter(!is.na(duration_in_traffic)) %>% 
+  filter(mode != 'driving' | traffic == 'best_guess') %>% 
+  group_by(mode_traffic) %>% 
+  do(augment(lm(duration_in_traffic ~ distance, data=.))) %>% 
+  left_join(routes_f)
+    
+
+plot <- ggplot(tmp, aes(text = paste(route, origin, destination))) +
+  geom_point(aes(round(distance/1000), duration_in_traffic, colour=round(.resid/1000), size = workers_count), alpha = 0.5) +
+  scale_colour_gradient(low="blue", high="red") +
+  facet_grid(. ~ mode_traffic)  +
+  labs(title='Relación distancia tiempo',
+       size='Número de personas',
+       colour='Distancia residual',
+       y = 'Tiempo (s)',
+       x = 'Distancia (km)') 
+
+# ggplotly(plot, tooltip = 'text')
+plot
+```
+
+####**Haciendo zoom en distancia / tiempo medianas: 20 km y 60 min**
+
+```{r dist_time_median, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+tmp <- tmp %>% 
+  filter(distance < 20001 & duration_in_traffic < 60001) 
+
+plot <- ggplot(tmp, aes(text = paste(route, origin, destination))) +
+  geom_point(aes(round(distance/1000), duration_in_traffic, colour=round(.resid/1000), size = workers_count), alpha = 0.5) +
+  scale_colour_gradient(low="blue", high="red") +
+  facet_grid(. ~ mode_traffic)  +
+  labs(title='Relación distancia tiempo',
+       size='Número de personas',
+       colour='Distancia residual',
+       y = 'Tiempo (s)',
+       x = 'Distancia (km)') 
+
+ggplotly(plot, tooltip = 'text')
+```
