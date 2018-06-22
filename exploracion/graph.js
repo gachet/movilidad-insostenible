@@ -6,17 +6,42 @@ function(d) {
       console.log(data)
 
   }); */
+
+  globalOptions={
+    mode:"driving", //bicycling,driving,transit,walking
+    traffic: "pessimistic", // "best_guess" "optimistic"  "pessimistic"
+    targetCity: "Alcobendas"
+  }
+
+
 window.onload = function() {
-
-
   loadData();
   initCanvas();
+  jqueryEvents();
+
 }
+
+function jqueryEvents(){
+      $('input[type=radio][name=transportoptions]').change(function() {
+        //globalOptions.mode=this.id
+        dataChange("mode", this.id);
+      });
+}
+
 
 names = ["locations", "routes"]
 files = ["../residencia_trabajo/data/locations.csv", "../residencia_trabajo/data/routes.csv"]
 separators = [",", ","]
 globalData = {}
+
+function dataChange(property,value){
+  globalOptions[property]=value
+  if(property=="targetCity")
+    updateViz(true)
+    else {
+      updateViz(false)
+    }
+}
 
 function loadData() {
   d3.dsv(separators[0], files[0], function(d) {
@@ -30,6 +55,7 @@ function loadData() {
     d.workers_count=parseInt(d.workers_count);
     d.duration=parseInt(d.duration);
     d.distance=parseInt(d.distance);
+    d.id=d.origin+"_"+d.destination; //+"_"+d.mode+"_"+d.traffic
     return d;
   }).then(function(data) {
     globalData.routes = data;
@@ -47,7 +73,7 @@ function loadData() {
       .object(data);
     poblaciones = Object.keys(nestedRoutes)
     createForms()
-    initViz("Alcobendas")
+    updateViz(false)
   });
 
 }
@@ -60,7 +86,7 @@ function createForms() {
 
   var options = select
     .selectAll('option')
-    .data(poblaciones).enter()
+    .data(poblaciones.sort()).enter()
     .append('option')
     .text(function(d) {
       return d;
@@ -69,45 +95,60 @@ function createForms() {
   function onchange() {
     selectValue = d3.select('select').property('value')
     //aqui genero visualizacion
-    initViz(selectValue)
+  //  globalOptions.targetCity=selectValue;
+    dataChange("targetCity", selectValue);
+    ///updateViz()
     d3.select('body')
       .append('p')
       .text(selectValue + ' is the last selected option.')
   };
 }
 
+function updateViz(startNew){
+   if(startNew) svg.selectAll("*").remove(); // clean
 
-function initViz(selectedCityName) {
-  svg.selectAll("*").remove();
-   dataCity = nestedRoutes[selectedCityName]
+   dataCity = nestedRoutes[globalOptions.targetCity]
    //dataTransport=dataCity.filter(function(d){return d.mode=="bicycling"})
    dataTransport=dataCity
-     .filter(function(d){return d.mode === "bicycling"})
+    .filter(function(d){return d.status === "OK"})
+    .filter(function(d){return d.mode === globalOptions.mode})
+    .filter((d)=>{return ( d.traffic === globalOptions.traffic ||d.traffic=="NA" )  })
     // .filter(function(d){return ! (d.destination === selectedCityName) })
      .sort(function(a,b) { return parseInt(b.workers_count) - parseFloat(a.workers_count); })
      .slice(0,20)
-
     createPolarLayout(dataTransport);
 
-  var groupEnter =
+//update
+  var groupUpdate =
     svg.selectAll("g.city")
-    .data(dataTransport)
-    .enter()
+    .data( dataTransport,(d)=>{return d.id} )
+    //groupUpdate.transition().attr("transform", function(d){ return "translate(" + d.x+"," +d.y +")"})
+
+
+//enter
+    var groupEnter=groupUpdate.enter()
     .append("g")
-    .attr("transform", function(d){ return "translate(" + d.x+"," +d.y +")"})
+    .style("opacity",1)
     .attr("class", ()=> {return "city"})
+
+    //enter+update
+    var groupEnterUpdate=groupEnter.merge(groupUpdate)
+    groupEnterUpdate.transition().duration(1500).ease(d3.easePolyInOut).attr("transform", function(d){ return "translate(" + d.x+"," +d.y +")"})
+
 
 
   circlesEnter = groupEnter
     .append("circle")
     // .attr("cx", function(d) {    //   return d.x;    // })    // .attr("cy", function (d) { return d.x; })
+    .transition()
     .attr("r", function(d) {
       return d.r
     })
     .style("fill", function(d) {
       //return "#333";
       return d3.interpolateOrRd(d.Magnitude)
-    });
+    })
+
     groupEnter.append("text")
     .attr("dx", function(d){return 5})
     .text((d)=> {return d.destination})
@@ -116,28 +157,31 @@ function initViz(selectedCityName) {
     .style("fill","transparent")
     .attr("stroke","black")
     .attr('stroke-width', 1)
-    .attr("r",distanceRadius(30*60))
+    .attr("r",distanceScale(30*60))
+
+    groupUpdate.exit().transition().style("opacity", 0.0).select("circle").attr("r",0)
+    groupUpdate.exit().transition().delay(600).remove();
 
     svg.append("circle")
     .style("fill","transparent")
     .attr("stroke","black")
     .attr('stroke-width', 1)
-    .attr("r",distanceRadius(60*60))
+    .attr("r",distanceScale(60*60))
+
 
 }
 
-
-
 function createPolarLayout(dataset){
-  var dataSetCapado=dataset.filter((d)=>{return ! (d.origin===d.destination) })
-  var maxTime=d3.max(dataSetCapado,(d)=>{return parseInt(d.duration) })
-  var minTime=d3.min(dataSetCapado,(d)=>{return parseInt(d.duration) })
-   maxWorkers=d3.max(dataSetCapado,(d)=>{return parseInt(d.workers_count) })
-   minWorkers=d3.min(dataSetCapado,(d)=>{return parseInt(d.workers_count) })
+  var dataSetCapado=dataset.filter((d)=>{ return !(d.origin===d.destination) })
+  var maxTime=d3.max(dataSetCapado,(d)=>{ return parseInt(d.duration) })
+  var minTime=d3.min(dataSetCapado,(d)=>{ return parseInt(d.duration) })
+  maxWorkers=d3.max(dataSetCapado,(d)=> { return parseInt(d.workers_count) })
+  minWorkers=d3.min(dataSetCapado,(d)=> { return parseInt(d.workers_count) })
 
   var maxRadius=500
-   distanceRadius= d3.scaleLinear()
-    .domain([minTime, maxTime])
+
+   distanceScale= d3.scaleLinear()
+    .domain([0, 60*90])
     .range([0, maxRadius])
 
     var circleRadius= d3.scaleLinear()
@@ -147,21 +191,19 @@ function createPolarLayout(dataset){
 
   var step=(2*Math.PI)/dataset.length
   dataset.forEach(function(dstCity,indx,arr){
-
     if( dstCity.origin === dstCity.destination) {
-      dstCity.x =dstCity.xy=0;
+      dstCity.x =dstCity.y=0;
       dstCity.r=4;
       dstCity.Magnitude=1;
     }
     else{
-      dstCity.x = distanceRadius(dstCity.duration)*Math.sin(indx*step)
-      dstCity.y = distanceRadius(dstCity.duration)*Math.cos(indx*step)
+      dstCity.x = Math.round( distanceScale(dstCity.duration)*Math.sin(indx*step) )
+      dstCity.y = Math.round( distanceScale(dstCity.duration)*Math.cos(indx*step) )
       dstCity.r=circleRadius(dstCity.workers_count)
       dstCity.Magnitude=(dstCity.workers_count/maxWorkers)
     }
   })
 }
-
 
 function initCanvas() {
   available_width = $(window).width();
