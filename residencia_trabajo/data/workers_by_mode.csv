@@ -1,145 +1,106 @@
-mode,minutes,workers
-walking,10,1317
-walking,16,6532
-walking,17,5211
-walking,20,1640
-walking,21,10
-walking,22,8
-walking,25,9
-walking,26,5578
-walking,27,407
-walking,28,2457
-walking,29,3025
-bicycling,7,14
-bicycling,8,187
-bicycling,9,1793
-bicycling,10,4466
-bicycling,11,15829
-bicycling,12,8754
-bicycling,13,18705
-bicycling,14,4732
-bicycling,15,31311
-bicycling,16,16784
-bicycling,17,6569
-bicycling,18,21502
-bicycling,19,19598
-bicycling,20,14636
-bicycling,21,29615
-bicycling,22,48644
-bicycling,23,28460
-bicycling,24,24361
-bicycling,25,33756
-bicycling,26,16805
-bicycling,27,22759
-bicycling,28,16265
-bicycling,29,16816
-bicycling,30,16
-transit,5,2631
-transit,6,4
-transit,7,66
-transit,8,1093
-transit,9,2415
-transit,10,2899
-transit,11,1215
-transit,12,2796
-transit,13,5942
-transit,14,1485
-transit,15,1054
-transit,16,2493
-transit,17,1102
-transit,18,4760
-transit,19,3186
-transit,20,4518
-transit,21,3828
-transit,22,1634
-transit,23,3945
-transit,24,3252
-transit,25,6942
-transit,26,7542
-transit,27,3155
-transit,28,14492
-transit,29,6504
-transit,30,116
-driving,8,302
-driving,9,255
-driving,10,9330
-driving,11,3249
-driving,12,6482
-driving,13,15109
-driving,14,20307
-driving,15,25027
-driving,16,40935
-driving,17,42307
-driving,18,55169
-driving,19,52025
-driving,20,70919
-driving,21,66020
-driving,22,64259
-driving,23,79062
-driving,24,69501
-driving,25,72801
-driving,26,75273
-driving,27,57713
-driving,28,67174
-driving,29,68889
-driving,30,624
-no mode,0,1455
-no mode,1,1048
-no mode,2,1152
-no mode,3,986
-no mode,4,825
-no mode,5,944
-no mode,6,700
-no mode,7,552
-no mode,8,536
-no mode,9,414
-no mode,10,526
-no mode,11,162
-no mode,12,289
-no mode,13,273
-no mode,14,166
-no mode,15,125
-no mode,16,118
-no mode,17,340
-no mode,18,102
-no mode,19,84
-no mode,20,55
-no mode,21,95
-no mode,22,60
-no mode,23,50
-no mode,24,64
-no mode,25,45
-no mode,26,25
-no mode,27,48
-no mode,28,6
-no mode,29,15
-no mode,30,46491
-no mode,31,55480
-no mode,32,36207
-no mode,33,42862
-no mode,34,25013
-no mode,35,33986
-no mode,36,20845
-no mode,37,25889
-no mode,38,15997
-no mode,39,16588
-no mode,40,16553
-no mode,41,12727
-no mode,42,9333
-no mode,43,7885
-no mode,44,9774
-no mode,45,8867
-no mode,46,7630
-no mode,47,5316
-no mode,48,6167
-no mode,49,3665
-no mode,50,3605
-no mode,51,3564
-no mode,52,3725
-no mode,53,3172
-no mode,54,2257
-no mode,55,2419
-no mode,56,1639
-no mode,57,1948
-no mode,58,1772
-no mode,59,1534
+minutes,walking,bicycling,transit,driving,no mode
+5,NA,NA,2631,NA,NA
+6,NA,NA,4,NA,NA
+7,NA,NA,66,NA,NA
+8,NA,14,1093,NA,NA
+9,NA,38,2415,285,NA
+10,NA,1976,2883,3297,NA
+11,1317,11354,1223,7508,NA
+12,NA,11188,2782,5315,NA
+13,NA,12185,5305,7711,NA
+14,NA,13957,2128,20090,NA
+15,NA,12508,1062,22341,NA
+16,4,33075,2487,28379,NA
+17,11739,7286,1094,49575,NA
+18,NA,17208,1404,45210,NA
+19,NA,15944,4164,42420,NA
+20,NA,21913,4494,75898,NA
+21,1647,29381,4459,61420,NA
+22,3,29254,3011,63958,NA
+23,8,35090,2674,63858,NA
+24,NA,27114,2646,88328,NA
+25,9,31766,4893,58508,NA
+26,5578,26914,6983,83619,NA
+27,407,21703,5308,59343,NA
+28,2230,19159,3716,67739,NA
+29,908,11849,15678,53333,NA
+30,2649,20152,3848,69240,NA
+31,NA,NA,NA,NA,49942
+32,NA,NA,NA,NA,46114
+33,NA,NA,NA,NA,46675
+34,NA,NA,NA,NA,26702
+35,NA,NA,NA,NA,35957
+36,NA,NA,NA,NA,18773
+37,NA,NA,NA,NA,24553
+38,NA,NA,NA,NA,22052
+39,NA,NA,NA,NA,19678
+40,NA,NA,NA,NA,14488
+41,NA,NA,NA,NA,13706
+42,NA,NA,NA,NA,12297
+43,NA,NA,NA,NA,8444
+44,NA,NA,NA,NA,9322
+45,NA,NA,NA,NA,8229
+46,NA,NA,NA,NA,9104
+47,NA,NA,NA,NA,5595
+48,NA,NA,NA,NA,5572
+49,NA,NA,NA,NA,4972
+50,NA,NA,NA,NA,3931
+51,NA,NA,NA,NA,3434
+52,NA,NA,NA,NA,3870
+53,NA,NA,NA,NA,3255
+54,NA,NA,NA,NA,2663
+55,NA,NA,NA,NA,2276
+56,NA,NA,NA,NA,2349
+57,NA,NA,NA,NA,1490
+58,NA,NA,NA,NA,2095
+59,NA,NA,NA,NA,1576
+60,NA,NA,NA,NA,1199
+61,NA,NA,NA,NA,1401
+62,NA,NA,NA,NA,1084
+63,NA,NA,NA,NA,983
+64,NA,NA,NA,NA,1031
+65,NA,NA,NA,NA,819
+66,NA,NA,NA,NA,1083
+67,NA,NA,NA,NA,521
+68,NA,NA,NA,NA,513
+69,NA,NA,NA,NA,542
+70,NA,NA,NA,NA,484
+71,NA,NA,NA,NA,247
+72,NA,NA,NA,NA,165
+73,NA,NA,NA,NA,360
+74,NA,NA,NA,NA,231
+75,NA,NA,NA,NA,146
+76,NA,NA,NA,NA,115
+77,NA,NA,NA,NA,344
+78,NA,NA,NA,NA,97
+79,NA,NA,NA,NA,81
+80,NA,NA,NA,NA,93
+81,NA,NA,NA,NA,70
+82,NA,NA,NA,NA,63
+83,NA,NA,NA,NA,67
+84,NA,NA,NA,NA,65
+85,NA,NA,NA,NA,37
+86,NA,NA,NA,NA,38
+87,NA,NA,NA,NA,30
+88,NA,NA,NA,NA,37
+89,NA,NA,NA,NA,12
+90,NA,NA,NA,NA,14
+91,NA,NA,NA,NA,12
+92,NA,NA,NA,NA,9
+93,NA,NA,NA,NA,20
+94,NA,NA,NA,NA,8
+95,NA,NA,NA,NA,3
+96,NA,NA,NA,NA,8
+97,NA,NA,NA,NA,5
+98,NA,NA,NA,NA,4
+99,NA,NA,NA,NA,4
+100,NA,NA,NA,NA,3
+102,NA,NA,NA,NA,4
+103,NA,NA,NA,NA,7
+104,NA,NA,NA,NA,1
+105,NA,NA,NA,NA,3
+106,NA,NA,NA,NA,2
+108,NA,NA,NA,NA,1
+109,NA,NA,NA,NA,1
+110,NA,NA,NA,NA,6
+112,NA,NA,NA,NA,2

@@ -55,9 +55,9 @@ sustainablest_b <- routes_f %>%
   distinct(route, mode, duration_in_traffic) %>% 
   spread(mode, duration_in_traffic) %>% 
   mutate(mode = case_when(
-    walking < 1801 ~ 'walking',
-    bicycling < 1801 ~ 'bicycling',
-    transit < 1801 ~ 'transit',
+    walking < 1829 ~ 'walking',
+    bicycling < 1829 ~ 'bicycling',
+    transit < 1829 ~ 'transit',
     TRUE ~ 'driving'
   )) %>% 
   distinct(route, mode) %>% 
@@ -69,9 +69,13 @@ sustainablest_b <- routes_f %>%
 
 ## number of workers by mode and by time
 modes <- sustainablest_b %>% 
-  mutate(minutes = minute(seconds_to_period(duration_in_traffic))) %>% 
-  group_by(mode, duration_in_traffic) %>% 
-  summarise(workers = sum(workers_count, na.rm = T))
+  mutate(minutes = round(duration_in_traffic/60)) %>% 
+  group_by(mode, minutes) %>% 
+  summarise(workers = sum(workers_count, na.rm = T)) %>% 
+  spread(mode, workers)
+
+nomode <- filter(sustainablest_b, mode == 'no mode') %>% 
+  mutate(minutes = round(duration_in_traffic/60))
 
 write_csv(modes, '../data/workers_by_mode.csv')
 
