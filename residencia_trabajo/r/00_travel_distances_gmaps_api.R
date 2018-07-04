@@ -166,7 +166,14 @@ rm(df, file, filePath, files, name, walking, bicycling, transit, driving_best_gu
 routes <- distances %>% 
   left_join(routes)
 
+routes_d3 <- routes %>% 
+  filter(mode != 'driving' | traffic == 'best_guess') %>% 
+  select(route, origin_code, origin, destination_code, destination, mode, distance, duration_in_traffic, workers_count) %>% 
+  rename('duration' = duration_in_traffic, 'workers' = workers_count)
+
 write_csv(routes, '../data/routes.csv')
+write_csv(routes_d3, '../data/routes_d3.csv')
+
 
 
 ################ MUNICIPALITIES
@@ -196,5 +203,6 @@ locations <- routes %>%
 
 
 write_csv(locations, '../data/locations.csv')
+
 
 rm(places_by_origin)
