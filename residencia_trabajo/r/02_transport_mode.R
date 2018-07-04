@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 
 setwd('~/Documents/_projects/2018/movilidad-insostenible/residencia_trabajo/r/')
 
@@ -50,7 +51,7 @@ ggplot(quickest, aes(x = duration_in_traffic, weight = workers_count, fill = mod
   geom_density(position = position_stack(reverse = TRUE), alpha = 0.5)
 
 
-sustainablest_b <- routes_f %>% 
+sustainablest_b <- routes_f %>%
   distinct(route, mode, duration_in_traffic) %>% 
   spread(mode, duration_in_traffic) %>% 
   mutate(mode = case_when(
@@ -66,6 +67,13 @@ sustainablest_b <- routes_f %>%
   select(route, origin_code, destination_code, origin, destination, option, mode, duration_in_traffic, workers_count) %>% 
   mutate(mode = factor(mode, levels = c('walking' , 'bicycling', 'transit', 'driving', 'no mode')))
 
+## number of workers by mode and by time
+modes <- sustainablest_b %>% 
+  mutate(minutes = minute(seconds_to_period(duration_in_traffic))) %>% 
+  group_by(mode, duration_in_traffic) %>% 
+  summarise(workers = sum(workers_count, na.rm = T))
+
+write_csv(modes, '../data/workers_by_mode.csv')
 
 densPlot <- ggplot(sustainablest, aes(x = duration_in_traffic, weight = workers_count/sum(workers_count, na.rm = T), fill = mode, colour = mode)) + 
   # geom_density(position = position_stack(reverse = TRUE), alpha = 0.5) +

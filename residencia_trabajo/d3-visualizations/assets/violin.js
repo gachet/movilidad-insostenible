@@ -51,7 +51,7 @@ const formatTime = d3.timeFormat("%H:%M"),
 
 
 // Load the data
-d3.csv('../../data/routes_d3.csv', function(error, mydata) {
+d3.csv('../data/routes_d3.csv', function(error, mydata) {
 	if (error) throw error;
 
 	// ------ Data & scales------ // 
